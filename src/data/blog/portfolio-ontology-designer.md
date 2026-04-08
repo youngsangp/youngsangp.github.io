@@ -1,6 +1,6 @@
 ---
 author: 박영상
-pubDatetime: 2025-04-08T09:00:00Z
+pubDatetime: 2025-12-01T09:00:00Z
 title: Ontology Designer - Knowledge Graph IDE
 slug: ontology-designer
 featured: true

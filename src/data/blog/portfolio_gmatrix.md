@@ -1,6 +1,6 @@
 ---
 author: 박영상
-pubDatetime: 2026-04-09T09:00:00Z
+pubDatetime: 2025-11-01T09:00:00Z
 title: G-MATRIX Project - FastAPI + LangChain 기반 AI 플랫폼
 slug: portfolio-gmatrix
 featured: false
