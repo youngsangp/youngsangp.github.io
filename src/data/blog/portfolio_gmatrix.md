@@ -1,3 +1,17 @@
+---
+author: 박영상
+pubDatetime: 2026-04-09T09:00:00Z
+title: G-MATRIX Project - FastAPI + LangChain 기반 AI 플랫폼
+slug: portfolio-gmatrix
+featured: false
+draft: false
+tags:
+  - FastAPI
+  - LangChain
+  - RAG
+  - Python
+description: G-MATRIX - FastAPI + LangChain 기반 RAG 시스템 구축 경험
+---
 # G-MATRIX · 엔터프라이즈 한국어 Text-to-SQL 엔진
 
 > 자연어 질문으로 BI 리포트를 자동 생성하는 폐쇄망 환경용 RAG 기반 Text-to-SQL 엔진
