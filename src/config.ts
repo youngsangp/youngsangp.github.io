@@ -1,5 +1,5 @@
 export const SITE = {
-  website: "https://youngsangp.github.io/",  // 본인 GitHub username
+  website: "https://youngsangp.github.io/",
   author: "박영상",
   profile: "https://github.com/youngsangp",
   desc: "11년차 풀스택 개발자 · AI 융합팀 · Knowledge Graph & LLM",
@@ -7,11 +7,17 @@ export const SITE = {
   ogImage: "astropaper-og.jpg",
   lightAndDarkMode: true,
   postPerIndex: 4,
-  postPerPage: 3,
+  postPerPage: 4,
   scheduledPostMargin: 15 * 60 * 1000,
   showArchives: true,
+  showBackButton: true,
   editPost: {
-    enabled: false,  // 편집 링크 숨김
+    enabled: false,
+    text: "Edit page",
+    url: "https://github.com/youngsangp/youngsangp.github.io/edit/main/",
   },
   dynamicOgImage: true,
+  lang: "ko",
+  timezone: "Asia/Seoul",
+  dir: "ltr",
 } as const;
