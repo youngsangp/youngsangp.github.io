@@ -7,7 +7,6 @@ import Socials from "@/components/Socials.astro";
 import LinkButton from "@/components/LinkButton.astro";
 import Card from "@/components/Card.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
-import IconRss from "@/assets/icons/IconRss.svg";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import { SITE } from "@/config";
 import { SOCIALS } from "@/constants";
@@ -15,52 +14,104 @@ import { SOCIALS } from "@/constants";
 const posts = await getCollection("blog");
 
 const sortedPosts = getSortedPosts(posts);
-const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
-const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
+
+const STACK = [
+  {
+    category: "Backend",
+    items: ["Java", "Python", "FastAPI", "Spring", "Node.js"],
+  },
+  {
+    category: "Frontend",
+    items: ["TypeScript", "JavaScript", "Sigma.js", "Graphology", "Webpack"],
+  },
+  {
+    category: "AI / Data",
+    items: ["LangChain", "LLM", "GraphRAG", "Jena Fuseki", "Elasticsearch"],
+  },
+  {
+    category: "Infra",
+    items: ["Docker", "Jenkins", "GitLab CI", "Linux"],
+  },
+];
+
+const FOCUS = [
+  "Ontology",
+  "Knowledge Graph",
+  "Vector DB",
+  "LLM Orchestration",
+  "RAG Pipeline",
+  "Enterprise AI",
+];
 ---
 
 <Layout>
   <Header />
   <main id="main-content" data-layout="index" class="app-layout">
-    <section id="hero" class:list={["pt-8 pb-6", "border-b border-border"]}>
-      <h1 class="my-4 inline-block text-4xl font-bold sm:my-8 sm:text-5xl">
-        Mingalaba
-      </h1>
-      <a
-        target="_blank"
-        href="/rss.xml"
-        class="inline-block"
-        aria-label="rss feed"
-        title="RSS Feed"
-      >
-        <IconRss
-          width={20}
-          height={20}
-          class="scale-125 stroke-accent stroke-3 rtl:-rotate-90"
-        />
-        <span class="sr-only">RSS Feed</span>
-      </a>
+    <section id="hero" class:list={["pt-12 pb-14", "border-b border-border"]}>
+      <p class="text-xs font-medium tracking-[0.2em] uppercase text-accent mb-6">
+        Fullstack Engineer
+      </p>
 
-      <p>
-        AstroPaper is a minimal, responsive, accessible and SEO-friendly Astro
-        blog theme. This theme follows best practices and provides accessibility
-        out of the box. Light and dark mode are supported by default. Moreover,
-        additional color schemes can also be configured.
-      </p>
-      <p class="mt-2">
-        Read the blog posts or check
-        <LinkButton
-          class="underline decoration-dashed underline-offset-4 hover:text-accent"
-          href="https://github.com/satnaing/astro-paper#readme"
-        >
-          README
-        </LinkButton> for more info.
-      </p>
+      <h1 class="text-5xl font-bold sm:text-6xl leading-tight tracking-tight">
+        Youngsang Park
+      </h1>
+      <p class="mt-2 text-2xl font-light text-foreground/70">박영상</p>
+
+      <div class="mt-8 max-w-2xl">
+        <p class="text-base leading-relaxed">
+          11년의 풀스택 개발 경험을 바탕으로 <strong>Knowledge Graph</strong>와
+          <strong>LLM</strong> 기반 엔터프라이즈 AI 프로덕트를 설계·개발·운영합니다.
+          Vector Search, OWL Reasoning, RAG를 융합한 하이브리드 파이프라인
+          구축에 관심이 많습니다.
+        </p>
+      </div>
+
+      <div class="mt-8 space-y-1 text-sm text-foreground/70">
+        <p>BIMATRIX · 기술연구소 AI 융합팀</p>
+        <p>Based in Seoul, Republic of Korea</p>
+      </div>
+
+      <!-- Focus Areas -->
+      <div class="mt-10">
+        <p class="text-xs font-medium tracking-[0.2em] uppercase text-foreground/50 mb-3">
+          Focus Areas
+        </p>
+        <p class="text-sm text-foreground/80 mb-4 leading-relaxed">
+          Ontology · Knowledge Graph · Vector DB를 활용한
+          <strong>End-to-end AI 파이프라인 설계</strong>에 관심을 두고 있습니다.
+        </p>
+        <div class="flex flex-wrap gap-x-4 gap-y-2">
+          {FOCUS.map(item => (
+            <span class="text-base font-medium">{item}</span>
+          ))}
+        </div>
+      </div>
+
+      <!-- Tech Stack Grid -->
+      <div class="mt-12">
+        <p class="text-xs font-medium tracking-[0.2em] uppercase text-foreground/50 mb-5">
+          Tech Stack
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
+          {STACK.map(group => (
+            <div>
+              <h3 class="text-sm font-semibold text-accent border-b border-accent/30 pb-2 mb-3">
+                {group.category}
+              </h3>
+              <ul class="space-y-1.5">
+                {group.items.map(item => (
+                  <li class="text-sm text-foreground/85">{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {
-        // only display if at least one social link is enabled
         SOCIALS.length > 0 && (
-          <div class="mt-4 flex max-sm:flex-col sm:items-center">
-            <div class="me-2 mb-1 whitespace-nowrap sm:mb-0">Social Links:</div>
+          <div class="mt-12 flex items-center">
+            <span class="sr-only">Social Links:</span>
             <Socials />
           </div>
         )
@@ -68,17 +119,11 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
     </section>
 
     {
-      featuredPosts.length > 0 && (
-        <section
-          id="featured"
-          class:list={[
-            "pt-12 pb-6",
-            { "border-b border-border": recentPosts.length > 0 },
-          ]}
-        >
-          <h2 class="text-2xl font-semibold tracking-wide">Featured</h2>
-          <ul>
-            {featuredPosts.map(data => (
+      sortedPosts.length > 0 && (
+        <section id="projects" class="pt-14 pb-6">
+          <h2 class="text-2xl font-semibold tracking-tight">Projects</h2>
+          <ul class="mt-6">
+            {sortedPosts.map(data => (
               <Card variant="h3" {...data} />
             ))}
           </ul>
@@ -86,23 +131,9 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
       )
     }
 
-    {
-      recentPosts.length > 0 && (
-        <section id="recent-posts" class="pt-12 pb-6">
-          <h2 class="text-2xl font-semibold tracking-wide">Recent Posts</h2>
-          <ul>
-            {recentPosts.map(
-              (data, index) =>
-                index < SITE.postPerIndex && <Card variant="h3" {...data} />
-            )}
-          </ul>
-        </section>
-      )
-    }
-
-    <div class="my-8 text-center">
+    <div class="my-10 text-center">
       <LinkButton href="/posts/">
-        All Posts
+        All Projects
         <IconArrowRight class="inline-block rtl:-rotate-180" />
       </LinkButton>
     </div>

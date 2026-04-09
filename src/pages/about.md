@@ -18,5 +18,5 @@ title: "About"
 - **Infra**: Docker, Jenkins, GitLab CI
 
 ## 📫 Contact
-- Email: your@email.com
+- Email: ini6351@gmail.com
 - GitHub: [github.com/youngsangp](https://github.com/youngsangp)
