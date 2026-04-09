@@ -1,6 +1,6 @@
 ---
 author: 박영상
-pubDatetime: 2025-12-01T09:00:00Z
+pubDatetime: 2026-02-01T09:00:00Z
 title: Ontology Designer · Knowledge Graph IDE
 slug: ontology-designer
 featured: true
@@ -29,7 +29,7 @@ BIMATRIX Trinity 제품군에 포함되어 사내 제품과 외부 고객사에 
 ## At a Glance
 
 - **역할** · 프론트엔드 · 백엔드 · LLM 파이프라인 · CI/CD · 운영
-- **기간** · 2024 ~ 현재
+- **기간** · 2026년 2월 ~ 현재
 - **상태** · 사내 제품 + 외부 고객사 실사용
 - **스택** · TypeScript, Sigma.js, Python, FastAPI, LangChain, Jena Fuseki, Elasticsearch, GPT-OSS 120B
 
