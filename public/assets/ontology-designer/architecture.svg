@@ -23,8 +23,8 @@
 
   <g transform="translate(260, 130)">
     <rect x="0" y="0" width="160" height="42" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
-    <text x="80" y="18" font-size="12" font-weight="600" text-anchor="middle" fill="#1e40af">UI 시스템</text>
-    <text x="80" y="33" font-size="10" text-anchor="middle" fill="#64748b">트리 · 패널 · 모달</text>
+    <text x="80" y="18" font-size="12" font-weight="600" text-anchor="middle" fill="#1e40af">4탭 패널</text>
+    <text x="80" y="33" font-size="10" text-anchor="middle" fill="#64748b">클래스·인스턴스·관계·속성</text>
   </g>
 
   <g transform="translate(435, 130)">
@@ -36,7 +36,7 @@
   <g transform="translate(610, 130)">
     <rect x="0" y="0" width="160" height="42" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
     <text x="80" y="18" font-size="12" font-weight="600" text-anchor="middle" fill="#1e40af">다국어 · 검색</text>
-    <text x="80" y="33" font-size="10" text-anchor="middle" fill="#64748b">i18next · MiniSearch</text>
+    <text x="80" y="33" font-size="10" text-anchor="middle" fill="#64748b">i18n · 노드 검색</text>
   </g>
 
   <!-- Arrow: Frontend to Backend -->
@@ -47,7 +47,7 @@
   <rect x="60" y="240" width="780" height="230" rx="12" fill="#ffffff" stroke="#334155" stroke-width="2"/>
 
   <text x="85" y="280" font-size="13" font-weight="700" fill="#334155" letter-spacing="1.5">백엔드</text>
-  <text x="85" y="305" font-size="18" font-weight="700" fill="#0f172a">Trinity LangFlow · FastAPI · Python</text>
+  <text x="85" y="305" font-size="18" font-weight="700" fill="#0f172a">TRINITY Langflow Backend · Python</text>
 
   <!-- API Layer -->
   <g transform="translate(85, 330)">
@@ -55,12 +55,12 @@
     <text x="15" y="22" font-size="11" font-weight="700" fill="#854d0e" letter-spacing="1">API 계층</text>
 
     <text x="15" y="46" font-size="12" font-weight="600" fill="#0f172a">ontology.py</text>
-    <text x="95" y="46" font-size="11" fill="#64748b">PDF 파싱 · TTL 생성</text>
-    <text x="95" y="61" font-size="11" fill="#64748b">팩트 추출 · 2단계 생성</text>
+    <text x="105" y="46" font-size="11" fill="#64748b">PDF 파싱 (Docling)</text>
+    <text x="105" y="61" font-size="11" fill="#64748b">팩트 추출 · TTL 생성 · VLM</text>
 
     <text x="15" y="86" font-size="12" font-weight="600" fill="#0f172a">graphdb.py</text>
-    <text x="95" y="86" font-size="11" fill="#64748b">SPARQL · NL→SPARQL</text>
-    <text x="95" y="101" font-size="11" fill="#64748b">스키마 · 추론 트리플</text>
+    <text x="105" y="86" font-size="11" fill="#64748b">SPARQL · 스키마 조회</text>
+    <text x="105" y="101" font-size="11" fill="#64748b">NL→SPARQL · RAG Retriever</text>
   </g>
 
   <!-- Service Layer -->
@@ -68,17 +68,17 @@
     <rect x="0" y="0" width="380" height="120" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
     <text x="15" y="22" font-size="11" font-weight="700" fill="#5b21b6" letter-spacing="1">서비스 계층</text>
 
-    <text x="15" y="46" font-size="12" font-weight="600" fill="#0f172a">TripleStoreClient (ABC)</text>
-    <text x="15" y="61" font-size="10" fill="#64748b">멀티 백엔드 추상화</text>
+    <text x="15" y="46" font-size="12" font-weight="600" fill="#0f172a">NL-to-SPARQL (3,900줄)</text>
+    <text x="15" y="61" font-size="10" fill="#64748b">7단계 파이프라인 · 6종 템플릿</text>
 
-    <text x="15" y="85" font-size="12" font-weight="600" fill="#0f172a">NL-to-SPARQL 파이프라인</text>
-    <text x="15" y="100" font-size="10" fill="#64748b">SPO 분해 · RAG · 질의 분할</text>
+    <text x="15" y="85" font-size="12" font-weight="600" fill="#0f172a">FusekiClient</text>
+    <text x="15" y="100" font-size="10" fill="#64748b">GSP · SPARQL Protocol</text>
 
     <text x="220" y="46" font-size="12" font-weight="600" fill="#0f172a">시맨틱 인덱스</text>
-    <text x="220" y="61" font-size="10" fill="#64748b">BGE-M3 임베딩</text>
+    <text x="220" y="61" font-size="10" fill="#64748b">BGE-M3 임베딩 · ES</text>
 
     <text x="220" y="85" font-size="12" font-weight="600" fill="#0f172a">MXLLModel</text>
-    <text x="220" y="100" font-size="10" fill="#64748b">LangChain 래퍼</text>
+    <text x="220" y="100" font-size="10" fill="#64748b">LangChain Core 래퍼</text>
   </g>
 
   <!-- Arrows: Backend to External -->
@@ -93,33 +93,33 @@
     <text x="20" y="30" font-size="11" font-weight="700" fill="#991b1b" letter-spacing="1.5">LLM</text>
     <text x="20" y="55" font-size="16" font-weight="700" fill="#0f172a">GPT-OSS 120B</text>
     <text x="20" y="78" font-size="12" fill="#64748b">온프레미스 엔드포인트</text>
-    <text x="20" y="95" font-size="12" fill="#64748b">Bimatrix Provider</text>
+    <text x="20" y="95" font-size="12" fill="#64748b">VLM (이미지 분석)</text>
     <line x1="20" y1="108" x2="220" y2="108" stroke="#fecaca" stroke-width="1"/>
     <text x="20" y="128" font-size="11" fill="#64748b">· Reasoning fallback</text>
-    <text x="20" y="143" font-size="11" fill="#64748b">· 2단계 TTL 생성</text>
+    <text x="20" y="143" font-size="11" fill="#64748b">· SPARQL 생성 · TTL 생성</text>
   </g>
 
   <!-- Graph DB -->
   <g transform="translate(330, 530)">
     <rect x="0" y="0" width="240" height="150" rx="12" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
-    <text x="20" y="30" font-size="11" font-weight="700" fill="#065f46" letter-spacing="1.5">그래프 DB</text>
+    <text x="20" y="30" font-size="11" font-weight="700" fill="#065f46" letter-spacing="1.5">Knowledge Graph</text>
     <text x="20" y="55" font-size="16" font-weight="700" fill="#0f172a">Jena Fuseki</text>
-    <text x="20" y="78" font-size="12" fill="#64748b">TDB2 · 영속 저장</text>
+    <text x="20" y="78" font-size="12" fill="#64748b">TDB2 영속 저장</text>
     <text x="20" y="95" font-size="12" fill="#64748b">OWL Micro Reasoner</text>
     <line x1="20" y1="108" x2="220" y2="108" stroke="#a7f3d0" stroke-width="1"/>
-    <text x="20" y="128" font-size="11" fill="#64748b">· SPARQL 1.1 표준</text>
-    <text x="20" y="143" font-size="11" fill="#64748b">· 4계층 추론 구조</text>
+    <text x="20" y="128" font-size="11" fill="#64748b">· SPARQL 1.1 실행</text>
+    <text x="20" y="143" font-size="11" fill="#64748b">· Named Graph 격리</text>
   </g>
 
   <!-- Vector DB -->
   <g transform="translate(600, 530)">
     <rect x="0" y="0" width="240" height="150" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
-    <text x="20" y="30" font-size="11" font-weight="700" fill="#1e3a8a" letter-spacing="1.5">벡터 DB</text>
+    <text x="20" y="30" font-size="11" font-weight="700" fill="#1e3a8a" letter-spacing="1.5">시맨틱 검색</text>
     <text x="20" y="55" font-size="16" font-weight="700" fill="#0f172a">Elasticsearch</text>
     <text x="20" y="78" font-size="12" fill="#64748b">BGE-M3 임베딩</text>
-    <text x="20" y="95" font-size="12" fill="#64748b">시맨틱 인덱스</text>
+    <text x="20" y="95" font-size="12" fill="#64748b">온톨로지 시맨틱 인덱스</text>
     <line x1="20" y1="108" x2="220" y2="108" stroke="#bfdbfe" stroke-width="1"/>
-    <text x="20" y="128" font-size="11" fill="#64748b">· 스토어별 격리</text>
-    <text x="20" y="143" font-size="11" fill="#64748b">· IRI 후보 매칭</text>
+    <text x="20" y="128" font-size="11" fill="#64748b">· 키워드 → IRI 매칭</text>
+    <text x="20" y="143" font-size="11" fill="#64748b">· N-hop 구조 확장</text>
   </g>
 </svg>

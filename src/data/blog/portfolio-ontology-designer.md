@@ -8,19 +8,25 @@ draft: false
 tags:
   - Knowledge Graph
   - LLM
-  - FastAPI
+  - RAG
+  - Agent
+  - Python
   - TypeScript
-  - Sigma.js
-  - GraphRAG
+  - Vector Search
+  - Elasticsearch
+  - Text-to-SPARQL
   - Ontology
-description: RDF/OWL 기반 엔터프라이즈 지식 그래프 IDE. LLM · Vector Search · OWL Reasoning을 결합한 하이브리드 파이프라인.
+  - Data Pipeline
+  - Docker
+  - CI/CD
+description: RDF/OWL 기반 지식 그래프 IDE. 자연어→SPARQL 변환, Elasticsearch + BGE-M3 하이브리드 RAG, LLM 기반 온톨로지 자동 생성, PDF→Ontology 3-Stage 비동기 데이터 파이프라인을 포함합니다.
 ---
 
 ![Ontology Designer 전체 레이아웃](/assets/ontology-designer/01-overview.png)
 
 도메인 전문가가 직접 지식 그래프를 설계하고, LLM이 그 구조를 정확히 이해할 수 있도록 만드는 웹 기반 온톨로지 IDE입니다. RDF/OWL 표준을 따르되, 사용자가 OWL 용어를 몰라도 되도록 설계했습니다. 자연어·RDB·PDF로부터 온톨로지를 자동 생성하는 파이프라인과 SPARQL 기반 탐색까지 하나의 도구 안에서 처리합니다.
 
-BIMATRIX Trinity 제품군에 포함되어 사내 제품과 외부 고객사에 온프레미스로 배포되어 있으며, 기획부터 운영까지 1인이 풀스택으로 담당했습니다.
+BIMATRIX TRINITY 제품군의 상용 모듈로, 외부 고객사에 온프레미스로 납품·운영되고 있습니다. 기획부터 운영까지 1인이 풀스택으로 담당했습니다.
 
 > 스크린샷과 상세 구현은 사내·고객사 배포 제품 특성상 일부만 공개합니다.
 
@@ -28,10 +34,10 @@ BIMATRIX Trinity 제품군에 포함되어 사내 제품과 외부 고객사에 
 
 ## At a Glance
 
-- **역할** · 프론트엔드 · 백엔드 · LLM 파이프라인 · CI/CD · 운영
-- **기간** · 2026년 2월 ~ 현재
-- **상태** · 사내 제품 + 외부 고객사 실사용
-- **스택** · TypeScript, Sigma.js, Python, FastAPI, LangChain, Jena Fuseki, Elasticsearch, GPT-OSS 120B
+- **역할** · **풀스택 설계·구현 (1인)** · 프론트엔드 + 백엔드 API + LLM/RAG 파이프라인 + 데이터 파이프라인 + CI/CD + 운영
+- **기간** · 2026년 2월 – 현재
+- **상태** · 상용 제품 (외부 고객사 온프레미스 납품·운영 중)
+- **스택** · Python, TypeScript, Sigma.js, LangChain Core, Jena Fuseki (TDB2 + OWL Reasoning), Elasticsearch (BGE-M3), Docker, Jenkins
 
 ---
 
@@ -47,19 +53,50 @@ RAG가 주류가 된 이후에도 한 가지 한계가 분명했습니다. 벡�
 
 ## 무엇을 만들었나
 
-![그래프 기반 시각 편집기](/assets/ontology-designer/02-graph-visualization.png)
+### 그래프 기반 시각 편집기
 
-**그래프 기반 시각 편집기**가 중심입니다. Sigma.js와 Graphology 위에 ForceAtlas2 레이아웃을 얹어 수백 개 노드의 온톨로지를 부드럽게 렌더링합니다. 클래스 뷰와 인스턴스 뷰를 전환하며 같은 온톨로지를 다른 추상화 수준에서 탐색할 수 있고, 노드를 클릭하면 k-hop BFS로 주변 관계만 강조되고 나머지는 dim 처리됩니다. Ctrl+클릭으로 여러 클래스를 동시에 선택하면 클래스 간 크로스 관계(ObjectProperty)가 자동으로 표시됩니다.
+![그래프 시각화 + 좌측 탐색 패널](/assets/ontology-designer/02-graph-visualization.png)
 
-![AI Helper — LLM 기반 온톨로지 생성·설명·검증·번역](/assets/ontology-designer/07-ai-helper.png)
+Sigma.js + Graphology + ForceAtlas2 기반의 웹 그래프 에디터입니다. 클래스 뷰와 인스턴스 뷰 전환, k-hop BFS 기반 주변 관계 탐색, 4탭 온톨로지 탐색 패널(클래스·인스턴스·관계·속성)을 지원합니다. OWL 구조를 직관적으로 편집할 수 있도록 설계했습니다.
 
-**AI Helper**는 GPT-OSS 120B 온프레미스 엔드포인트와 연동되어 네 가지 모드를 제공합니다. 자연어 설명으로 OWL TTL을 생성하고, 기존 클래스·속성에 대한 도메인 설명을 달고, 네이밍·누락된 레이블 같은 품질 이슈를 자동 감지하고, 한·영·일 라벨을 일괄 번역합니다.
+### 자연어 → SPARQL 검색 파이프라인 (Knowledge Graph Retriever)
 
-![PDF → Ontology 3-Stage 비동기 파이프라인](/assets/ontology-designer/09-pdf-ontology.png)
+Text-to-SQL이 자연어를 SQL로 바꿔 RDB에서 답을 찾듯이, 이 파이프라인은 자연어를 SPARQL로 바꿔 Knowledge Graph에서 답을 찾습니다. 약 3,900줄 규모의 `nl_to_sparql` 모듈을 직접 설계·구현했습니다.
 
-**PDF → Ontology 파이프라인**은 긴 매뉴얼 문서도 비동기 Job 시스템으로 처리합니다. pdfplumber로 19종 시맨틱 블록(heading, table, menu_path 등)을 감지하고, 청크별 LLM 호출을 병렬로 돌려 팩트를 추출한 뒤 TTL로 병합합니다.
+"서울대 출신이면서 영어 시험 점수가 900점 이상인 직원"처럼 조건이 교차하는 질의를 처리하기 위해 7단계 파이프라인으로 구성했습니다:
 
-이외에도 온톨로지 병합 마법사, 일괄 텍스트 입력, SPARQL 직접 실행, OWL 제약 검증 및 Auto-Fix, 다국어(한·영·일) 지원 등을 포함합니다.
+1. **온톨로지 자동 선택** — 여러 온톨로지가 등록된 환경에서 질문에 가장 적합한 온톨로지를 LLM이 선택
+2. **키워드 → IRI 시맨틱 매칭** — Elasticsearch + BGE-M3 임베딩으로 자연어 토큰을 온톨로지 IRI에 매칭, N-hop 구조 확장으로 관련 프로퍼티까지 포함
+3. **6종 구조적 템플릿(T1–T6)** — 인스턴스 목록, 서브클래스 탐색, 속성 조회, 카운트, 관계 순회, 서브그래프 추출. 템플릿으로 해결되면 **LLM 호출 없이 즉시 실행**
+4. **LLM SPARQL 생성 (Fallback)** — 복합 질의만 LLM에 넘기되, 필터링된 스키마와 의도 분류 결과를 프롬프트에 주입
+5. **SPARQL 정적 검증** — GRAPH 절 보정, CURIE↔IRI 수정, 안티패턴 재작성, 안전성 검증(DROP/DELETE 차단)
+6. **실행 + 0건 Fallback** — 결과가 없으면 메인 클래스 기반 fallback SPARQL 자동 생성
+7. **RAG 모드** — 키워드별 ES 검색 → 엔티티별 양방향 N-hop SPARQL → 트리플 수집 → LLM 컨텍스트 제공
+
+핵심 설계 원칙은 **"템플릿으로 풀 수 있으면 LLM을 쓰지 않는다"**. LLM은 비용과 지연이 크므로 구조적으로 매칭 가능한 질의는 결정론적 코드로 처리하고, 진짜 복합적인 질의에만 LLM을 사용합니다. RAG 모드는 TRINITY 플랫폼의 Langflow 기반 Retriever 컴포넌트로 연결되어 대화형 AI에서 Knowledge Graph 검색을 수행합니다.
+
+### AI Helper — LLM 기반 온톨로지 지원
+
+![AI Helper](/assets/ontology-designer/07-ai-helper.png)
+
+온프레미스 LLM(120B급)과 연동되며, 자연어 프롬프트 기반으로 네 가지 모드를 제공합니다.
+
+- **생성 모드**: 자연어 설명을 입력하면 OWL TTL을 자동 생성. 시스템 프롬프트에 현재 온톨로지 스키마를 주입해 기존 구조와 일관된 결과를 유도
+- **수정 모드**: "역량 클래스에 자격증 관련 속성 추가해줘" 같은 자연어 지시로 구조 변경. 현재 TTL을 컨텍스트로 넘기고, diff를 계산해 변경분만 적용
+- **설명 모드**: 온톨로지 구조를 비개발자도 이해할 수 있는 자연어로 풀어서 설명
+- **검증 모드**: 네이밍 일관성, 누락된 라벨·도메인·레인지, 고아 클래스 같은 품질 이슈를 자동 감지하고 수정안 제시
+
+### PDF → Ontology 3-Stage 비동기 데이터 파이프라인
+
+![PDF → Ontology 파이프라인](/assets/ontology-designer/09-pdf-ontology.png)
+
+긴 매뉴얼·규정 문서를 온톨로지로 변환하는 3단계 비동기 파이프라인입니다. Job ID 기반 상태 폴링과 `asyncio.Task.cancel()` 기반 취소를 지원하며, 10분 TTL 자동 정리로 서버 리소스를 관리합니다.
+
+**Stage 0: 시맨틱 블록 추출.** IBM Docling을 사용해 PDF의 문서 구조(표·목차·그림 캡션 등)를 감지합니다. 마크다운 중간 표현을 거쳐 19종 시맨틱 블록(heading, paragraph, table, list 등)으로 분류합니다. PDF 내 임베디드 이미지는 VLM(Vision Language Model)에 전달해 텍스트 설명으로 변환하고, 해당 페이지 블록에 삽입합니다.
+
+**Stage 1: 팩트 추출 (병렬).** 각 청크를 LLM에 보내 `{classes, properties, relationships, individuals}` 형태의 팩트 JSON을 뽑습니다. `asyncio.gather`로 병렬 호출하며, 토큰 예산을 사전 계산해 시스템 프롬프트 + 출력 버퍼를 뺀 나머지에 맞춰 청크를 동적 분할합니다.
+
+**Stage 2: TTL 생성.** 수집된 팩트를 병합한 뒤 참조 무결성 검증(orphan 클래스 제거, 중복 프로퍼티 타입 정리)을 거치고, LLM으로 최종 TTL을 생성합니다. 결과가 크면 파트별로 분할 생성한 뒤 병합하며, rdflib로 파싱 검증합니다. ObjectProperty/DatatypeProperty 이중 선언 같은 OWL DL 위반도 자동 보정합니다.
 
 ---
 
@@ -68,89 +105,42 @@ RAG가 주류가 된 이후에도 한 가지 한계가 분명했습니다. 벡�
 ![시스템 아키텍처 다이어그램](/assets/ontology-designer/architecture.svg)
 *프론트엔드 · 백엔드 · 외부 시스템 3계층으로 구성된 아키텍처*
 
-백엔드는 세 개의 외부 시스템과 통신합니다 — 온프레미스 LLM(GPT-OSS 120B), Jena Fuseki TDB2(지식 그래프 저장 및 OWL 추론), Elasticsearch(BGE-M3 임베딩 기반 시맨틱 인덱스).
-
-Triple Store 레이어는 추후 고객사별 요구에 대응하기 위해 추상화해 두었습니다. 현재는 Fuseki가 완전 구현되어 있고, GraphDB · Stardog · Oxigraph · RDFox용 인터페이스가 준비되어 있습니다.
+백엔드는 세 개의 외부 시스템과 통신합니다 — 온프레미스 LLM(120B급), Jena Fuseki TDB2(지식 그래프 영속 저장 + OWL Micro Reasoning), Elasticsearch(BGE-M3 임베딩 기반 시맨틱 인덱스). 프론트엔드(TypeScript, Sigma.js)는 TRINITY 플랫폼의 Langflow 기반 백엔드 API를 통해 이 시스템들과 통신합니다.
 
 ---
 
-## 가장 흥미로웠던 세 가지 기술 문제
+## 핵심 기술 문제
 
-### 1. Jena Fuseki에 영속성과 추론을 동시에 얹기
+### 1. NL→SPARQL 파이프라인의 핵심 설계 결정
 
-TDB2로 온톨로지를 영속 저장하면서 OWL Reasoner(subClassOf transitive closure 등)도 동시에 동작시켜야 했습니다. Fuseki 공식 문서의 추론 예제는 메모리 모델 기반이라 TDB2와 바로 결합되지 않았고, 시도할 때마다 `ClassCastException`이 반복됐습니다.
+위 파이프라인에서 가장 어려웠던 결정은 **"LLM에 언제 의존하고, 언제 의존하지 않을지"**의 경계였습니다.
 
-원인은 Jena의 타입 체계에 있었습니다. `InfModel`은 **Model** 위에만 올릴 수 있지만 TDB2는 **Dataset** 단위로 영속화합니다. `InfDataset` 같은 타입은 Jena에 존재하지 않고, Fuseki는 `fuseki:dataset`에 **Dataset** 타입만 받습니다. 결국 "Dataset에서 Model을 꺼내서 InfModel로 감싸고, 그걸 다시 Dataset으로 포장"해야 했습니다.
+초기에는 모든 질의를 LLM에 넘겼지만, 응답 시간(3–8초)과 불안정한 SPARQL 문법이 문제였습니다. 분석해 보니 실제 질의의 60–70%는 "A 클래스의 인스턴스 목록", "B의 속성값", "C와 관련된 엔티티"처럼 구조적 패턴으로 분류할 수 있었습니다. 이 발견을 바탕으로 **6종 구조적 템플릿(T1–T6)**을 먼저 시도하고, 매칭되면 LLM을 호출하지 않는 방식으로 전환했습니다. 결과적으로 대부분의 질의가 수십ms 내에 정확한 SPARQL로 변환되고, LLM은 진짜 복합적인 질의에만 사용됩니다.
 
-해결한 구조는 다음과 같습니다.
+또한 키워드 → IRI 매칭에서 **규칙 기반 → 시맨틱 검색(BGE-M3) → LLM** 3단계 폴백 구조를 둬, 한 단계가 실패해도 다음 단계에서 복구되도록 설계했습니다. 이 "결정론적 코드 우선, LLM은 fallback" 원칙이 정확도·속도·비용 세 가지를 동시에 잡는 핵심이었습니다.
 
-```
-DatasetTDB2 (영속)
-    ↓  tdb2:GraphTDB2  (default graph → Model 추출)
-GraphTDB2
-    ↓  ja:baseModel  (OWL Micro Reasoner 결합)
-InfModel
-    ↓  ja:defaultGraph  (Dataset으로 재포장)
-RDFDataset
-```
+### 2. PDF→Ontology 비동기 파이프라인의 기술 과제
 
-이 4계층 구조 덕분에 TDB2의 영속성과 OWL Micro 추론이 단일 SPARQL 쿼리 안에서 자연스럽게 동작하게 되었고, 서버가 재시작되어도 추론된 관계가 유지됩니다. 이 패턴은 공식 문서에 명시적으로 나와 있지 않아 여러 소스를 조합하며 찾아낸 부분이라 메모에 잘 정리해 두었습니다.
+- **Docling 기반 구조 파싱**: IBM Docling의 마크다운 변환 출력을 ParsedBlock/ParsedSection 포맷으로 정규화해, 이후 팩트 추출·TTL 생성 파이프라인이 파서 출력에 무관하게 동작하도록 설계. 시맨틱 블록 매핑 규칙이 핵심
+- **VLM 이미지 파이핑**: PDF 임베디드 이미지를 추출 → base64 인코딩 → OpenAI-compatible multimodal API로 전송 → 텍스트 설명을 해당 페이지 블록에 삽입. 이미지가 많은 문서에서 전체 타임아웃과 개별 실패 처리가 핵심
+- **토큰 예산 관리**: 청크별로 시스템 프롬프트 + 출력 버퍼를 뺀 가용 토큰을 사전 계산하고, 초과 시 청크를 동적 분할. LLM 호출 비용과 정확도의 균형
 
----
+### 3. Jenkins CI/CD 자동화
 
-### 2. Knowledge Graph와 Vector Search를 하이브리드로 결합하기
-
-"서울대 출신이면서 영어 시험 점수가 900점 이상인 직원" 같은 자연어 질의를 SPARQL로 변환해 실행해야 했습니다. 순수 키워드 매칭으로는 IRI를 못 찾고, LLM만으로는 온톨로지 스키마를 정확히 모르고, 벡터 검색만으로는 `domain/range` 같은 관계 제약을 표현할 수 없었습니다.
-
-결국 여러 수단을 조합하는 파이프라인이 답이었습니다.
-
-1. **LLM이 자연어 질문을 S/P/O 조건 JSON으로 분해**합니다. 이때 시스템 프롬프트에 온톨로지 스키마(클래스, 속성, domain→range)를 주입해 LLM이 근거 있게 조건을 만들도록 합니다.
-2. **각 조건의 IRI를 3단계 폴백으로 매칭**합니다. 먼저 localName 직접 매칭을 시도하고, 실패하면 BGE-M3 임베딩 기반 Elasticsearch 시맨틱 검색으로 후보를 찾고, 그래도 없으면 스키마 키워드로 fallback합니다.
-3. **domain/range 제약으로 검증**합니다. LLM이 엉뚱한 속성을 골랐다면 스키마 수준에서 걸러냅니다.
-4. **결과가 0건이면 Question Decomposition으로 분할**합니다. LLM이 원 질문을 최대 5개의 서브 질문으로 나누고, 이전 결과를 변수로 치환하며 순차 실행한 뒤 left-outer-join으로 병합합니다.
-
-핵심은 **"어디까지 LLM에 맡기고, 어디부터 결정론적 코드로 잡을지"** 의 경계를 긋는 일이었습니다. 이해(분해·매칭)는 LLM에, 검증(제약·실행)은 결정론적 로직에 맡긴 것이 이 구조의 뼈대입니다.
-
-> 이 파이프라인은 여러 회사의 사내 Text-to-SQL/RAG 시스템이 풀고 있는 문제와 같은 영역입니다. Vector Search만으로는 부족한 구조적 추론을 Knowledge Graph로 보강하는 하이브리드 접근이며, 현재 GraphRAG라는 이름으로 주목받고 있는 방향이기도 합니다.
-
----
-
-### 3. PDF에서 온톨로지를 만드는 3-Stage 비동기 파이프라인
-
-긴 매뉴얼 PDF를 한 번에 LLM에 넣을 수 없고, plain text로 변환하면 표·목차·메뉴 경로 같은 구조 정보가 전부 사라집니다. 구조를 잃으면 LLM이 의미 있는 온톨로지를 만들지 못합니다.
-
-그래서 파이프라인을 세 단계로 쪼갰습니다.
-
-**Stage 0: 시맨틱 블록 추출.** pdfplumber로 텍스트를 뽑되, 정규식과 규칙으로 19종 블록(heading, paragraph, table, list, menu_path, form_field, authentication 등)을 분류합니다. 이미지는 Vision LLM으로 캡션을 생성해 텍스트화합니다.
-
-**Stage 1: 팩트 추출 (병렬).** 각 청크를 LLM에 보내 `{classes, properties, relationships, individuals}` 형태의 팩트 JSON을 뽑습니다. `asyncio.gather`로 병렬 호출해 청크 10개면 순차 대비 크게 빨라졌습니다.
-
-**Stage 2: TTL 생성.** 수집된 팩트를 병합해 LLM에게 다시 넘기고, 2-shot 예시와 함께 최종 TTL을 생성시킨 뒤 rdflib로 파싱 검증합니다.
-
-이 과정에서 의외로 골치 아팠던 부분은 **Reasoning 모델의 빈 응답 처리**였습니다. GPT-OSS 120B 같은 리즈닝 모델은 종종 `content` 필드가 비고 `additional_kwargs.reasoning_content`에만 실제 답이 들어있거나, `<think>...</think>` 태그 안에 답을 남기는 경우가 있었습니다. 이걸 단계별로 fallback하도록 래퍼를 만든 뒤에야 "빈 응답" 에러가 거의 사라졌습니다.
-
-토큰 예산도 사전 계산이 필요했습니다. 시스템 프롬프트 토큰 + 출력 버퍼를 빼고 남은 공간에 맞춰 청크를 동적으로 재분할하지 않으면, 긴 섹션에서 컨텍스트 초과가 납니다. 그리고 사용자가 취소할 수 있어야 했기에 Job ID 기반 상태 폴링, 10분 TTL 자동 정리, `asyncio.Task.cancel()` 기반 취소를 하나의 Job 패턴으로 묶었습니다.
-
----
-
-## 덤으로 기억에 남는 것
-
-- **이벤트 시스템 디버깅**: hover · click · drag · k-hop 포커스 · 다중 선택 · 모드 전환이 동시에 얽혀 있는 Sigma 이벤트 핸들러를 전수 분석해 19개의 상태 충돌과 중복 렌더 이슈를 찾아 수정했습니다. "가끔 라벨이 안 나와요" 같은 재현 어려운 버그들이 이 과정에서 대부분 사라졌습니다.
-
-- **그래프 레이아웃 품질**: 100+ 노드에서 스파게티 그래프가 되는 문제를 Circular → ForceAtlas2 2단계 배치와 degree 기반 적응형 노드 크기로 해결했습니다. 엣지 라벨은 기본 숨김으로 두고 hover/focus 시에만 reducer에서 복원하는 방식으로 성능과 가독성을 동시에 잡았습니다.
-
-- **Jenkins CI/CD**: 제품 버전별 브랜치(500/600/700 등)에 동일 산출물을 한 번의 빌드로 일괄 배포하기 위해 Active Choices Plugin 기반 다중 브랜치 선택과 `VERSION_BUMP` 1회 실행 패턴을 직접 설계했습니다.
+제품 버전별 브랜치에 동일 산출물을 한 번의 빌드로 일괄 배포하기 위해 Active Choices Plugin 기반 다중 브랜치 선택과 버전 범프 1회 실행 패턴을 직접 설계했습니다. Docker 이미지 빌드 및 배포도 포함됩니다.
 
 ---
 
 ## 회고
 
-프론트엔드 상태와 백엔드 API 계약을 한 머리에 담고 있어 인터페이스 불일치가 거의 없었다는 점이 프로젝트 진행상 가장 큰 장점이었습니다. 대신 코드 리뷰가 없는 만큼 기술 부채를 쌓지 않으려 의식적으로 노력했고, 특히 이벤트 시스템처럼 상태가 복잡한 영역은 주기적으로 전수 분석을 돌렸습니다.
-
 무엇보다 **LLM을 "마법 블랙박스"가 아닌 "파이프라인의 한 컴포넌트"로 다루는 감각**이 가장 값진 경험이었습니다. 생성형 모델에 어디까지 맡기고 어디부터 결정론적 코드로 보정할지, 모델의 실패를 어떻게 감지하고 복구할지, 토큰 예산을 어떻게 관리할지 — 이런 실무적인 질문들을 몸으로 배웠습니다.
 
-다음 단계로는 E2E 테스트 자동화(Playwright), Kubernetes 환경 운영, 그리고 생성된 온톨로지가 실제 RAG 정확도에 얼마나 기여하는지를 end-to-end로 평가하는 GraphRAG 평가 체계를 학습·구축해 보고 싶습니다.
+프론트엔드 상태와 백엔드 API 계약을 한 머리에 담고 있어 인터페이스 불일치가 거의 없었다는 점이 프로젝트 진행상 가장 큰 장점이었습니다. 대신 코드 리뷰가 없는 만큼 기술 부채를 쌓지 않으려 의식적으로 노력했습니다.
+
+다음 단계로는 Docker 기반 컨테이너 운영을 더 깊이 다루고, LLM 응답 품질을 체계적으로 추적하는 모니터링 체계와 자연어→SPARQL 파이프라인의 정확도를 정량 평가하는 프레임워크를 만들어 보고 싶습니다.
 
 ---
 
-**Tech Stack** · TypeScript · Sigma.js · Graphology · Python · FastAPI · LangChain · Jena Fuseki (TDB2 + OWL) · Elasticsearch · BGE-M3 · GPT-OSS 120B · Docker · Jenkins
+**Tech Stack** · Python · TypeScript · Sigma.js · Graphology · LangChain Core · Jena Fuseki (TDB2 + OWL) · Elasticsearch · BGE-M3 · Docling · Docker · Jenkins
+
+**핵심 키워드** · Knowledge Graph · RAG · Hybrid Search · Text-to-SPARQL · LLM Pipeline · Data Pipeline · VectorDB · Embedding · 비동기 파이프라인 · Docker · CI/CD

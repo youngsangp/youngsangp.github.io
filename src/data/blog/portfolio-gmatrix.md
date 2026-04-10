@@ -8,19 +8,22 @@ draft: false
 tags:
   - LLM
   - RAG
-  - LangChain
   - FastAPI
   - Text-to-SQL
   - Vector Search
   - Korean NLP
+  - Haystack
+  - FAISS
+  - Milvus
+  - Multi-Agent
 description: 폐쇄망 온프레미스 환경에서 동작하는 한국어 Text-to-SQL 엔진. 하이브리드 검색 + JSON 중간표현(IR) + 다중 에이전트 구조로 BI 리포트를 자연어로 생성.
 ---
 
-![G-MATRIX 메인 화면](/assets/gmatrix/01-overview.png)
+![G-MATRIX — 자연어 질의 → JSON IR 변환](/assets/gmatrix/01-overview.png)
 
-비개발자가 한국어로 질문하면 BI 리포트를 자동으로 만들어 주는 엔터프라이즈 **Text-to-SQL 엔진**입니다. "작년 3분기 서울지역 매출 Top 10 부서" 같은 자연어 질의가 들어오면, 사내 BI 리포트 메타데이터와 결합해 SQL을 생성하고 실행합니다.
+비개발자가 한국어로 질문하면 BI 리포트를 자동으로 만들어 주는 엔터프라이즈 **Text-to-SQL 엔진**입니다. "올해 3분기 월별 연체개월수가 3보다 큰 상품, 잔액 건수 알려줘" 같은 자연어 질의가 들어오면, 사내 BI 리포트 메타데이터와 결합해 구조화된 JSON 쿼리를 생성하고 SQL로 변환·실행합니다.
 
-단순히 GPT API에 스키마를 던지는 구조가 아니라, **폐쇄망 온프레미스 LLM + 하이브리드 RAG + JSON 중간표현(IR) + 다중 에이전트** 파이프라인을 직접 설계·구현했습니다. BIMATRIX의 BI 제품군(AUD)에 통합되어 사내 운영 및 고객사 환경에 배포되었습니다.
+단순히 LLM API에 스키마를 던지는 구조가 아니라, **폐쇄망 온프레미스 LLM + FAISS/Milvus 하이브리드 RAG + 계층적 힌트 시스템 + JSON 중간표현(IR) + 다중 에이전트** 파이프라인을 직접 설계·구현했습니다. BIMATRIX의 BI 제품군(AUD)에 통합되어 사내 운영 및 고객사 환경에 배포되었습니다.
 
 > 코드와 상세 구현은 회사 자산 특성상 일부만 공개합니다.
 
@@ -28,10 +31,10 @@ description: 폐쇄망 온프레미스 환경에서 동작하는 한국어 Text-
 
 ## At a Glance
 
-- **역할** · **팀 리드 개발** · 프론트엔드 + 백엔드 + LLM 파이프라인 + RAG 시스템 + 프롬프트 설계
-- **기간** · 2024 ~ 2025년 9월 (이후 후속 제품 Trinity로 발전)
+- **역할** · **팀 리드 개발** · 백엔드 + LLM 파이프라인 + RAG 시스템 + 프롬프트 설계 + 멀티 에이전트 아키텍처
+- **기간** · 2024 ~ 2025년 9월 (이후 후속 제품 TRINITY로 발전)
 - **상태** · 사내 운영 + 외부 고객사 온프레미스 배포
-- **스택** · Python · FastAPI · LangChain · LangChain-OpenAI · SentenceTransformer · FAISS · Milvus · rdflib · SPARQLWrapper
+- **스택** · Python · FastAPI · Haystack · SentenceTransformer · FAISS · Milvus · Pydantic · asyncio
 
 ---
 
@@ -52,22 +55,13 @@ description: 폐쇄망 온프레미스 환경에서 동작하는 한국어 Text-
 
 ## 시스템 아키텍처
 
-![시스템 아키텍처](/assets/gmatrix/architecture.svg)
-*폐쇄망 LLM · 하이브리드 검색 · JSON 중간표현 · Dual SQL 생성으로 구성된 파이프라인*
+서버 구성은 **Client → AUD(BI 플랫폼) → G-MATRIX ↔ LLM + Vector Store** 입니다. G-MATRIX는 AUD의 백엔드로 동작하며, 자연어 질의를 받아 JSON 쿼리를 생성하고 BI 엔진에 반환합니다.
 
-크게 보면 다섯 단계입니다.
-
-1. **전처리** — 한글 숫자 변환, 도메인 약어 정규화, 키워드 추출
-2. **하이브리드 검색** — Embedding + InvertedIndex 결합으로 메타필드/용어/리포트 후보 매칭
-3. **GUI 구조화** — 검색 결과를 dim · measure · filter 형태로 정규화
-4. **JSON IR 빌드** — LLM이 SQL 대신 JSON 중간표현을 생성하도록 유도
-5. **Dual SQL 생성** — 리포트 타입에 따라 AUD 템플릿 바인딩 또는 META 동적 생성으로 분기
-
-![파이프라인 흐름](/assets/gmatrix/02-pipeline.png)
+파이프라인은 크게 **의도 분류 → Key-Value 분리 → 벡터 검색 → 리포트 선택 → GUI 항목 선정 → LLM JSON 생성 → 교정/SQL 변환** 순서로 진행됩니다. 핵심 설계 원칙은 **"LLM은 자연어 이해만, 나머지는 결정론적 코드가"** 입니다. 의도 분류와 key-value 분해, JSON 생성에만 LLM을 사용하고, 벡터 검색·리포트 선택·SQL 변환은 모두 규칙 기반으로 동작합니다.
 
 ---
 
-## 가장 흥미로웠던 네 가지 기술 문제
+## 핵심 기술 문제 세 가지
 
 ### 1. 왜 하이브리드 검색을 만들었나 — 한국어 도메인 약어와의 싸움
 
@@ -75,13 +69,12 @@ description: 폐쇄망 온프레미스 환경에서 동작하는 한국어 Text-
 
 해결은 **`GMatrixVectorStore`를 Embedding + InvertedIndex 하이브리드 구조**로 재설계하는 것이었습니다.
 
-- **Embedding 경로**: 사내 파인튜닝 모델(`bi-matrix/G-MATRIX-embedding-v1`)로 의미 기반 검색
-- **InvertedIndex 경로**: 부분문자열 기반 정확 매칭으로 약어·코드 보완
-- 두 경로의 결과를 reportcode 필터와 함께 병합하고 랭킹
+- **Embedding 경로**: 사내 파인튜닝 임베딩 모델로 의미 기반 검색. 검색 대상별 차등 임계값 적용 (Meta Field 0.8, Glossary 0.9)
+- **InvertedIndex 경로**: 부분문자열 기반 정확 매칭으로 약어·코드 보완. `"SD매출"`은 임베딩에서 놓치지만 InvertedIndex에서 `"SD"` 토큰으로 정확히 잡아냄
+- **3개 독립 Vector DB**: Meta Field, Glossary, Synonym을 각각 구축해 용도별 최적화
+- 두 경로의 결과를 reportcode 필터와 함께 병합하고 Top-K(20) 랭킹
 
-`InvertedIndex` 클래스를 직접 구현하면서, 기존 검색 라이브러리(Whoosh 등)를 쓰지 않은 이유도 있습니다. **메타필드 단위로 토큰을 잘게 분해해야 했고**, 토큰 가중치도 도메인에 맞춰 조정해야 했기 때문입니다. 한국어 BI 도메인의 특수성에 맞춘 경량 구현이 더 효과적이었습니다.
-
-이 변경 후 **잘못된 SQL 생성 빈도가 유의미하게 줄었고**, "AI가 이상한 답을 준다"는 사용자 불만이 크게 감소했습니다.
+기존 검색 라이브러리(Whoosh 등) 대신 `InvertedIndex`를 직접 구현한 이유는, 메타필드 단위로 토큰을 분해하고 가중치를 도메인에 맞춰 조정해야 했기 때문입니다. 이 변경 후 잘못된 SQL 생성 빈도가 유의미하게 줄었습니다.
 
 ---
 
@@ -93,133 +86,143 @@ description: 폐쇄망 온프레미스 환경에서 동작하는 한국어 Text-
 - **멀티뷰 merge 불가** — 여러 리포트 결과를 조합하는 시나리오에서 SQL만으로는 표현 한계
 - **레거시 호환 안 됨** — 기존 AUD 리포트 엔진의 SQL 정의 형식과 직접 충돌
 
-그래서 **LLM은 JSON IR만 만들고, SQL 생성은 결정론적 빌더가 담당**하도록 분리했습니다.
+그래서 **LLM은 JSON IR만 만들고, SQL 생성은 결정론적 빌더가 담당**하도록 분리했습니다. 실제 시스템에서 생성되는 JSON IR의 형태입니다:
 
 ```json
 {
-  "reportcode": "SALES_001",
-  "dimension": ["region", "quarter"],
+  "type": "pivot",
+  "dimension": ["T그룹값", "고객상태"],
   "measure": [
-    {"field": "sales_amt", "agg": "SUM"}
+    {"name": "수익", "summaryType": "Sum"},
+    {"name": "고객수"},
+    {"name": "말잔"}
   ],
   "filter": {
-    "op": "AND",
-    "conds": [
-      {"field": "region", "op": "=", "value": "서울"},
-      {"field": "year", "op": "=", "value": 2024}
+    "AND": [
+      {"name": "T그룹값", "operator": "=", "value": ["G1"]},
+      {"name": "수익", "operator": ">=", "value": ["100"]}
     ]
   },
-  "mergeType": "UNION"
+  "reportcode": "RPT_SALES_001"
 }
 ```
 
 이 구조의 이점은 명확했습니다.
 
-- ✅ **검증 가능** — JSON 스키마 단계에서 유효성 검사 가능
-- ✅ **멀티뷰 지원** — `mergeType`으로 UNION/INTERSECTION 조합 표현
-- ✅ **레거시 호환** — 기존 BI 엔진의 리포트 정의와 1:1 매핑
-- ✅ **디버깅 용이** — LLM 오류와 SQL 생성 오류를 분리해서 추적 가능
+- **검증 가능** — JSON 스키마 단계에서 유효성 검사 가능. `Correction` 클래스가 필드명 재검증, 예약어 체크, 차원 위치 보정까지 수행
+- **풍부한 연산자** — `=`, `<>`, `IN`, `NOT IN`, `BETWEEN`, `CONTAIN`, `NOT CONTAIN`, `START`, `END` 등 12종 필터 연산자 지원
+- **레거시 호환** — 기존 AUD BI 엔진의 리포트 정의와 1:1 매핑
+- **디버깅 용이** — LLM 오류와 SQL 생성 오류를 분리해서 추적 가능
 
 핵심 인사이트는 이거였습니다. **LLM의 가장 큰 약점은 비결정성이고, 가장 큰 강점은 모호한 자연어 이해다.** 이해 영역만 LLM에 맡기고, SQL 생성처럼 정밀함이 필요한 단계는 결정론적 코드로 잡았습니다.
 
 ---
 
-### 3. 왜 SQL 생성 경로를 두 개로 만들었나 (Dual Path)
+### 3. 계층적 힌트 시스템 — LLM에게 맥락을 쌓아주기
 
-수년간 축적된 AUD 리포트 자산을 그대로 버릴 수는 없었습니다. 그래서 `METASQLBuilder` 안에서 리포트 타입에 따라 두 가지 경로로 자동 분기했습니다.
+LLM에 프롬프트 하나를 던지는 대신, **7계층으로 분리된 힌트를 동적 조립**해서 전달하는 구조를 설계했습니다.
 
-| 경로 | 대상 | 방식 | 장점 |
-|---|---|---|---|
-| **AUD 템플릿 바인딩** | 기존 AUD 리포트 | 사전 정의 SQL + JSON filter 값 바인딩 | 검증된 SQL, 안정성 |
-| **META 동적 생성** | 신규/범용 질의 | JSON IR → SELECT/FROM/WHERE 동적 구성 | 유연성, 확장성 |
+| 계층 | 역할 | 예시 |
+|---|---|---|
+| **BASE_RULE** | 전역 규칙 (config) | "날짜 형식은 YYYYMM" |
+| **GUI_HINT** | 사용자가 선택한 필터값 | "T그룹값 = G1" |
+| **META_HINT** | 리포트별 고유 규칙 | "이 리포트는 pivot 타입" |
+| **FIELD_HINT** | 필드 설명·제약 | "연체개월수: 숫자형, 0~120" |
+| **TERM_HINT** | 동의어·다중항목 정의 | "SD매출 = 서비스디자인매출" |
+| **DATE_FORMAT** | 날짜 표현 매핑 | "올해→2025, 3분기→07~09" |
+| **NUMBER_HINT** | 한국어 숫자 변환 결과 | "'삼십만' = 300000" |
 
-이 분기 덕분에 **레거시 자산을 100% 재활용하면서도 신규 시나리오 대응이 가능**했습니다. 엔터프라이즈에서 자주 부딪히는 "기존 자산을 어떻게 최신 기술과 결합할 것인가" 라는 문제를 푸는 한 가지 답이었습니다.
+프롬프트 템플릿에는 `{hint}` 플레이스홀더 하나만 있고, 실행 시점에 이 7계층이 동적으로 채워집니다. 이렇게 분리한 덕분에 **리포트가 추가될 때 코드 수정 없이 데이터만 추가**하면 되었고, 프롬프트 디버깅 시 어느 계층에서 문제가 생겼는지 빠르게 특정할 수 있었습니다.
 
 ---
 
-### 4. 한국어 특화 전처리 — 임베딩만 믿지 않기
+## 한국어 특화 전처리
 
-한국어 BI 도메인에서는 임베딩이 만능이 아니었습니다. 사용자는 자연스럽게 이렇게 말합니다.
+한국어 BI 도메인에서는 임베딩이 만능이 아니었습니다. `TextConverter` 클래스로 세 가지 전처리를 수행합니다:
 
+**한국어 수사·단위 → 숫자 변환**
 ```
-"작년 삼십만원 이상 주문 보여줘"
-"매출 1억 2천만 이상인 거"
-"3분기 부서별 평균"
-```
-
-`TextConverter` 클래스로 한국어 수사·단위 표현을 아라비아 숫자로 변환했습니다.
-
-```
-"작년 삼십만원 이상 주문"  →  "작년 300000원 이상 주문"
-"매출 1억 2천만"            →  "매출 120000000"
+"삼십만원"  →  300000
+"1억 2천만"  →  120000000
+"이만삼천"   →  23000
 ```
 
-이 한 단계만으로도 filter 값 매칭률이 크게 개선되었습니다. **임베딩만 믿지 않고 규칙 기반 전처리를 적극 도입한 것**이 한국어 도메인에서의 현실적인 선택이었습니다.
+**시간 표현 파싱** — 8가지 날짜 입도(year, half, quarter, month, week, day 등) 자동 감지. `DateParser`가 `"올해 3분기"`를 `{year: 2025, quarter: 3}`으로 변환하고, 프롬프트에 구체적 날짜 예시를 삽입합니다.
 
-추가로 `core/preprocessing.py`에서 시간 표현(`작년`, `이번 분기`, `최근 30일`), 부서 코드 정규화, 도메인 동의어 사전 적용까지 처리하면서 LLM에 들어가는 입력 품질을 높였습니다.
+**키워드 기반 key-value 분해** — LLM이 자연어를 `"DATE:올해 3분기/월/연체개월수:3보다 큰"` 형태로 분해한 뒤, 구조화된 딕셔너리로 파싱합니다.
+
+**임베딩만 믿지 않고 규칙 기반 전처리를 적극 도입한 것**이 한국어 도메인에서의 현실적인 선택이었습니다.
+
+---
+
+## Dual SQL 경로
+
+`METASQLBuilder` 안에서 리포트 타입에 따라 두 가지 경로로 자동 분기했습니다.
+
+| 경로 | 대상 | 방식 | 장점 |
+|---|---|---|---|
+| **AUD 템플릿 바인딩** | 기존 AUD 리포트 (SD 모듈) | 사전 정의 SQL 테이블 + filter 변수 바인딩 | 검증된 SQL, 안정성 |
+| **META 동적 생성** | 신규/범용 질의 | JSON IR → SELECT/FROM/WHERE 동적 구성, CalcField·집계 함수 지원 | 유연성, 확장성 |
+
+이 분기 덕분에 **레거시 자산을 100% 재활용하면서도 신규 시나리오 대응이 가능**했습니다.
 
 ---
 
 ## 멀티 에이전트 구조
 
-후반부에는 단일 파이프라인을 넘어 **다중 에이전트 구조**로 확장했습니다. `core/agent/` 아래에 일곱 개의 에이전트가 있습니다.
+`AgentBase` 추상 클래스를 기반으로 `core/agent/` 아래에 일곱 개의 에이전트를 구현했습니다.
 
-- **`agent_router`** — 입력 의도 분류 후 적절한 에이전트로 라우팅
-- **`agent_selector`** — 후보 중 최적 에이전트 선택
+- **`agent_router`** — 입력 의도를 5가지(data_retrieval / data_summary_statistics / data_forecast / guide / general)로 분류, 임계값 0.6 기반 라우팅
+- **`agent_selector`** — 후보 메타필드 중 최적 선택
+- **`retrieve_agent`** — 파이프라인을 이용한 데이터 검색
+- **`search_agent`** — 벡터 유사도 기반 메타 검색
+- **`agent_summary`** — 결과 요약·통계·분석
 - **`general_agent`** — 일반 대화 / 인사 / 도움말
 - **`guide_agent`** — 사용 방법 안내
-- **`retrieve_agent`** — 데이터 검색 (위 파이프라인 사용)
-- **`search_agent`** — 메타 검색
-- **`agent_summary`** — 결과 요약 / 통계 / 분석
 
-`agent_router`가 사용자 질문의 카테고리를 먼저 판별한 뒤(데이터 조회 / 통계 / 예측 / 가이드 / 일반 대화) 적합한 에이전트에게 위임합니다. **LangGraph가 본격적으로 표준화되기 전**에 이 구조를 직접 손으로 설계해 둔 경험이, 이후 후속 제품 Trinity의 LangFlow 기반 워크플로우 설계로 자연스럽게 이어졌습니다.
+각 에이전트는 독립적인 system_prompt와 temperature를 가지며, 스트리밍 응답도 지원합니다. 이 멀티 에이전트 구조를 직접 손으로 설계해 둔 경험이, 이후 후속 제품 TRINITY의 LangFlow 기반 워크플로우 설계로 자연스럽게 이어졌습니다.
 
 ---
 
 ## LLM 호출 추상화
 
-폐쇄망 환경이 기본 전제였기 때문에 LLM **서빙 인프라**는 별도 담당이 운영했고(사내 GPU 서버 + 고객사는 온프레미스 설치), 모델도 GPT-OSS · Qwen 등 다양했습니다. 제 영역은 **LLM 호출 클라이언트와 프롬프트·파이프라인 설계**였습니다.
+`PromptHelper` 클래스에서 `LLM_TYPE` 설정 기반으로 세 가지 모드를 추상화했습니다.
 
-서버가 바뀌어도 코드를 손대지 않도록 `LLM_TYPE` 설정 기반으로 세 가지 모드를 추상화해 두었습니다.
+1. **로컬 transformer 직접 로드** — 4-bit NF4 양자화 지원, 개발용 (한국어 오픈소스 LLM)
+2. **Haystack PromptNode** — GPT-3.5/4 등 외부 API
+3. **사내 OpenAI 호환 엔드포인트** — 프로덕션 기본값, 온프레미스 vLLM 호환 서버
 
-1. **로컬 transformer 직접 로드** (개발용)
-2. **OpenAI / Claude API** — `CustomLLMClient` 래퍼
-3. **사내 OpenAI 호환 엔드포인트** (프로덕션 기본값)
+프롬프트는 태스크별 템플릿으로 중앙 관리합니다:
+- **`key-value_prompt`** — 형태소 분석 + key-value 분해
+- **`zero-shot_prompt_72B`** — 메인 JSON 생성 (72B 모델 최적화)
+- **`chain-zero-shot_prompt_72B`** — 연속 질문 시 이전 JSON 수정
+- **`intent_classification_prompt`** — 에이전트 라우팅용 의도 분류
+- **`copilot_function_prompt`** — AddSort, AddFilter, AddColumn, Format 함수 호출 생성
 
-세 가지 모드가 같은 인터페이스로 묶여 있어, 모델·서버가 바뀌어도 호출 코드는 그대로 유지됐습니다.
-
-프롬프트는 `prompt.py`의 `GMATRIX_PROMPT_TEMPLATES` 사전에 중앙화해 16개 이상의 태스크별 템플릿(질의 분해, 의도 분류, JSON 교정, 엔티티 추출, validation 등)을 관리했습니다. 일관성 확보와 A/B 테스트가 쉬워졌습니다.
-
-또 `temperature=0`, `seed=0`으로 고정해 **Text-to-SQL의 결정성**을 확보했습니다. 같은 질문에 같은 결과가 나와야 디버깅이 가능하니까요.
+`temperature=0`, `seed=0`으로 고정해 **Text-to-SQL의 결정성**을 확보했습니다.
 
 ---
 
-## 콜드스타트 최소화 — 임베딩 Pickle 캐시
+## 운영 안정성 설계
 
-메타필드·용어 수만 건을 매번 임베딩하면 서비스 재기동 시 수 분의 지연이 발생했습니다. 그래서 `EmbeddingCache`를 만들어 `datastore/embeding_cache.pkl`에 영속화했습니다.
-
-- 재기동 시 캐시 로드만 수행 (수 초)
-- 신규 문서만 incremental embedding
-- 메타데이터 변경 감지(`file_observer.py`) 시에만 부분 재구축
-
-이런 사소해 보이는 최적화가 운영 환경에서는 큰 차이를 만듭니다. 특히 SI 환경에서는 "재기동이 빠르다"는 게 그 자체로 신뢰의 척도였습니다.
+- **임베딩 캐시** — `EmbeddingCache`로 pickle 영속화. 재기동 시 수 초 내 로드, 신규 문서만 incremental embedding
+- **동시성 제어** — `asyncio.Semaphore(4)`로 워커당 최대 동시 요청 제한
+- **멀티테넌트 로깅** — 사용자별 개별 로그 파일 생성
+- **플랫폼 연동** — Teams 봇, OpenAI GPTs Actions, Kakao 챗봇
 
 ---
 
 ## 회고
 
-G-MATRIX는 LangChain·LangGraph 같은 표준 도구가 자리 잡기 전에 비슷한 구조를 손으로 설계한 프로젝트였습니다. 그래서 어떤 부분은 더 어려웠지만, 그 과정에서 얻은 감각이 가장 큰 자산이 되었습니다.
+G-MATRIX는 에이전트 프레임워크가 표준화되기 전에 비슷한 구조를 손으로 설계한 프로젝트였습니다. 그래서 어떤 부분은 더 어려웠지만, 그 과정에서 얻은 감각이 가장 큰 자산이 되었습니다.
 
-특히 **"LLM을 어디까지 믿을 것인가"** 의 경계선을 긋는 것이 설계의 핵심이었습니다. LLM은 비결정적인 "이해" 영역에, 결정론적 빌더는 SQL 생성 영역에 두는 분리가 유지보수성과 정확도를 모두 끌어올렸습니다. 이 원칙은 이후 Trinity와 Ontology Designer에서도 동일하게 적용한 패턴입니다.
+특히 **"LLM을 어디까지 믿을 것인가"** 의 경계선을 긋는 것이 설계의 핵심이었습니다. LLM은 비결정적인 "이해" 영역에, 결정론적 빌더는 SQL 생성 영역에 두는 분리가 유지보수성과 정확도를 모두 끌어올렸습니다. 이 원칙은 이후 TRINITY와 Ontology Designer에서도 동일하게 적용한 패턴입니다.
 
-또 하나, **순수 벡터 검색의 한계를 실제 프로덕션에서 체감한 것**이 컸습니다. 학술 논문에서는 임베딩 모델만으로 충분해 보이지만, 실제 한국어 BI 도메인에서는 약어·코드·수사 표현 등 임베딩이 못 잡는 표면적 패턴이 너무 많았습니다. **하이브리드 검색이 답이라는 것**을 몸으로 배웠습니다.
+또 하나, **순수 벡터 검색의 한계를 실제 프로덕션에서 체감한 것**이 컸습니다. 실제 한국어 BI 도메인에서는 약어·코드·수사 표현 등 임베딩이 못 잡는 표면적 패턴이 너무 많았습니다. InvertedIndex를 직접 구현하고, 검색 타입별로 차등 임계값을 설정하면서 **하이브리드 검색이 답이라는 것**을 몸으로 배웠습니다.
 
 마지막으로, 엔터프라이즈 환경에서는 **최신 기술보다 레거시 호환성**이 프로젝트의 성패를 가른다는 점도 배웠습니다. AUD 리포트 자산을 버리지 않고 결합한 Dual SQL 경로 설계가 G-MATRIX가 실제로 운영에 들어갈 수 있었던 결정적 이유였다고 생각합니다.
 
-팀 리드 입장에서는, 단일 파이프라인을 다중 에이전트 구조로 확장하면서 모듈 경계를 명확히 잡고 각 에이전트의 책임을 분리하는 일에 가장 많은 시간을 썼습니다. 결과적으로 신규 기능 추가가 쉬워졌고, 팀원이 새로운 에이전트를 추가할 때 부담이 줄어드는 것을 보면서 추상화의 가치를 다시 확인했습니다.
-
-다음 단계로는 LangGraph 기반의 자기 교정(self-correction) 에이전트, 대화형 follow-up 질의 지원, Langfuse·MLflow를 활용한 LLM 품질 모니터링 체계 구축에 관심이 있습니다. 이 부분은 현재 후속 제품 Trinity에서 발전시키고 있는 영역입니다.
 
 ---
 
-**Tech Stack** · Python · FastAPI · LangChain · LangChain-OpenAI · SentenceTransformer · FAISS · Milvus · rdflib · SPARQLWrapper · Pickle Cache · Pydantic
+**Tech Stack** · Python · FastAPI · Haystack · SentenceTransformer(`사내 파인튜닝 임베딩 모델`) · FAISS · Milvus · Pydantic · asyncio · Pickle Cache · WebSocket
