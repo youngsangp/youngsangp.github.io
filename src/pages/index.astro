@@ -18,15 +18,15 @@ const sortedPosts = getSortedPosts(posts);
 const STACK = [
   {
     category: "Backend",
-    items: ["Java", "Python", "FastAPI", "Spring", "Node.js"],
+    items: ["Python", "Java", "FastAPI", "Spring", "Node.js"],
+  },
+  {
+    category: "AI / Data",
+    items: ["LLM", "RAG", "Vector DB", "Elasticsearch", "Jena Fuseki"],
   },
   {
     category: "Frontend",
     items: ["TypeScript", "JavaScript", "Sigma.js", "Graphology", "Webpack"],
-  },
-  {
-    category: "AI / Data",
-    items: ["LangChain", "LLM", "GraphRAG", "Jena Fuseki", "Elasticsearch"],
   },
   {
     category: "Infra",
@@ -35,11 +35,11 @@ const STACK = [
 ];
 
 const FOCUS = [
-  "Ontology",
-  "Knowledge Graph",
-  "Vector DB",
-  "LLM Orchestration",
   "RAG Pipeline",
+  "Vector DB",
+  "Text-to-SQL",
+  "Data Pipeline",
+  "LLM",
   "Enterprise AI",
 ];
 ---
@@ -49,7 +49,7 @@ const FOCUS = [
   <main id="main-content" data-layout="index" class="app-layout">
     <section id="hero" class:list={["pt-12 pb-14", "border-b border-border"]}>
       <p class="text-xs font-medium tracking-[0.2em] uppercase text-accent mb-6">
-        Fullstack Engineer
+        Fullstack · AI/Data Engineer
       </p>
 
       <h1 class="text-5xl font-bold sm:text-6xl leading-tight tracking-tight">
@@ -59,10 +59,10 @@ const FOCUS = [
 
       <div class="mt-8 max-w-2xl">
         <p class="text-base leading-relaxed">
-          11년의 풀스택 개발 경험을 바탕으로 <strong>Knowledge Graph</strong>와
-          <strong>LLM</strong> 기반 엔터프라이즈 AI 프로덕트를 설계·개발·운영합니다.
-          Vector Search, OWL Reasoning, RAG를 융합한 하이브리드 파이프라인
-          구축에 관심이 많습니다.
+          11년의 풀스택 개발 경험을 바탕으로 <strong>LLM 기반 RAG 파이프라인</strong>과
+          <strong>데이터 파이프라인</strong>을 설계·개발·운영합니다.
+          백엔드부터 AI 파이프라인, Vector DB, 프론트엔드까지 End-to-end로
+          엔터프라이즈 AI 프로덕트를 만들고 있습니다.
         </p>
       </div>
 
@@ -77,8 +77,8 @@ const FOCUS = [
           Focus Areas
         </p>
         <p class="text-sm text-foreground/80 mb-4 leading-relaxed">
-          Ontology · Knowledge Graph · Vector DB를 활용한
-          <strong>End-to-end AI 파이프라인 설계</strong>에 관심을 두고 있습니다.
+          RAG · Vector DB · 데이터 파이프라인을 활용한
+          <strong>End-to-end AI 서비스 설계</strong>에 집중하고 있습니다.
         </p>
         <div class="flex flex-wrap gap-x-4 gap-y-2">
           {FOCUS.map(item => (

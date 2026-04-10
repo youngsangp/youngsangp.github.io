@@ -2,7 +2,7 @@ export const SITE = {
   website: "https://youngsangp.github.io/",
   author: "박영상",
   profile: "https://github.com/youngsangp",
-  desc: "11년차 풀스택 개발자 · AI 융합팀 · Knowledge Graph & LLM",
+  desc: "11년차 풀스택 · AI/Data 엔지니어 · RAG Pipeline · LLM · Vector DB",
   title: "Youngsang Park",
   ogImage: "astropaper-og.jpg",
   lightAndDarkMode: true,
