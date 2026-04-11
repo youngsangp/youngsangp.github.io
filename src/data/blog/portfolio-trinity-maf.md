@@ -31,7 +31,7 @@ TRINITY 제품군은 서로 성격이 다른 세 개의 백엔드 — LLM Agent 
 ## At a Glance
 
 - **역할** · 설계 · 구현 · 고객사 환경 대응 (1인)
-- **기간** · 2026년 1월 ~ 현재
+- **기간** · 2026년 1월 – 현재 (초기 구현 1개월 + 유지보수·기능 개선 지속)
 - **상태** · 상용 판매 제품 (AUD Platform) — 다수 고객사 온프레미스 납품·운영 중
 - **스택** · Java 17, Jakarta EE / Tomcat 9+, Apache HttpClient 5, Jakarta WebSocket, Gradle (Kotlin DSL)
 

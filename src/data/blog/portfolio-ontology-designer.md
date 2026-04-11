@@ -34,10 +34,10 @@ BIMATRIX TRINITY 제품군의 상용 모듈로, 외부 고객사에 온프레미
 
 ## At a Glance
 
-- **역할** · **풀스택 설계·구현 (1인)** · 프론트엔드 + 백엔드 API + LLM/RAG 파이프라인 + 데이터 파이프라인 + CI/CD + 운영
+- **역할** · AI 융합팀 **팀장** · 풀스택 설계·구현 (1인) · 프론트엔드 + 백엔드 API + LLM/RAG 파이프라인 + 데이터 파이프라인 + CI/CD + 운영
 - **기간** · 2026년 2월 – 현재
 - **상태** · 상용 제품 (외부 고객사 온프레미스 납품·운영 중)
-- **스택** · Python, TypeScript, Sigma.js, LangChain Core, Jena Fuseki (TDB2 + OWL Reasoning), Elasticsearch (BGE-M3), Docker, Jenkins
+- **스택** · Python, TypeScript, Sigma.js, LangChain Core, Langflow (FastAPI 기반), Jena Fuseki (TDB2 + OWL Reasoning), Elasticsearch (BGE-M3), Docker, Jenkins
 
 ---
 
@@ -74,6 +74,14 @@ Text-to-SQL이 자연어를 SQL로 바꿔 RDB에서 답을 찾듯이, 이 파이
 7. **RAG 모드** — 키워드별 ES 검색 → 엔티티별 양방향 N-hop SPARQL → 트리플 수집 → LLM 컨텍스트 제공
 
 핵심 설계 원칙은 **"템플릿으로 풀 수 있으면 LLM을 쓰지 않는다"**. LLM은 비용과 지연이 크므로 구조적으로 매칭 가능한 질의는 결정론적 코드로 처리하고, 진짜 복합적인 질의에만 LLM을 사용합니다. RAG 모드는 TRINITY 플랫폼의 Langflow 기반 Retriever 컴포넌트로 연결되어 대화형 AI에서 Knowledge Graph 검색을 수행합니다.
+
+### 시맨틱 온톨로지 인덱싱 (Elasticsearch + BGE-M3)
+
+위 NL→SPARQL 파이프라인이 자연어 토큰을 온톨로지 IRI에 정확히 매칭하려면, 온톨로지 전체를 벡터로 인덱싱하는 기반이 필요합니다. `semantic_index` 모듈이 이 역할을 합니다.
+
+온톨로지가 로드되면 SPARQL로 클래스·ObjectProperty·DataProperty·인스턴스를 추출하고, 각 요소의 **다국어 라벨(rdfs:label, skos:prefLabel)과 구조 정보(domain/range, 상위 클래스, 인스턴스 소속)**를 결합해 문서를 생성합니다. 이 문서를 BGE-M3 임베딩 모델로 벡터화한 뒤 Elasticsearch에 저장합니다.
+
+이렇게 하면 사용자가 "영어 점수"라고 입력해도, 온톨로지에 `englishScore`로 정의된 DataProperty를 시맨틱 유사도로 찾아낼 수 있습니다. 단순 키워드 매칭으로는 불가능한 한국어↔영어 크로스링구얼 검색, 약어·동의어 매칭이 가능해집니다. NL→SPARQL의 2단계(IRI 시맨틱 매칭)와 7단계(RAG 모드)가 모두 이 인덱스에 의존합니다.
 
 ### AI Helper — LLM 기반 온톨로지 지원
 
@@ -125,9 +133,9 @@ Text-to-SQL이 자연어를 SQL로 바꿔 RDB에서 답을 찾듯이, 이 파이
 - **VLM 이미지 파이핑**: PDF 임베디드 이미지를 추출 → base64 인코딩 → OpenAI-compatible multimodal API로 전송 → 텍스트 설명을 해당 페이지 블록에 삽입. 이미지가 많은 문서에서 전체 타임아웃과 개별 실패 처리가 핵심
 - **토큰 예산 관리**: 청크별로 시스템 프롬프트 + 출력 버퍼를 뺀 가용 토큰을 사전 계산하고, 초과 시 청크를 동적 분할. LLM 호출 비용과 정확도의 균형
 
-### 3. Jenkins CI/CD 자동화
+### 3. RAG Retriever 컴포넌트 설계
 
-제품 버전별 브랜치에 동일 산출물을 한 번의 빌드로 일괄 배포하기 위해 Active Choices Plugin 기반 다중 브랜치 선택과 버전 범프 1회 실행 패턴을 직접 설계했습니다. Docker 이미지 빌드 및 배포도 포함됩니다.
+NL→SPARQL 파이프라인을 단독 API로만 쓰지 않고, TRINITY 플랫폼의 **Langflow 기반 RAG 워크플로우에서 Retriever 컴포넌트로 재사용**할 수 있도록 설계했습니다. 대화형 AI(챗봇)가 Knowledge Graph를 검색 소스로 사용할 때, 질문 키워드별로 Elasticsearch 시맨틱 검색 → 엔티티별 양방향 N-hop SPARQL 탐색 → 트리플 수집 → LLM 컨텍스트 주입 순서로 동작합니다. 벡터 검색(비정형 문서)과 그래프 검색(정형 관계)을 하나의 Retriever 인터페이스로 통합해, 워크플로우 설계자가 데이터 소스를 의식하지 않고 조합할 수 있게 만든 것이 핵심 설계 포인트입니다.
 
 ---
 
@@ -137,10 +145,10 @@ Text-to-SQL이 자연어를 SQL로 바꿔 RDB에서 답을 찾듯이, 이 파이
 
 프론트엔드 상태와 백엔드 API 계약을 한 머리에 담고 있어 인터페이스 불일치가 거의 없었다는 점이 프로젝트 진행상 가장 큰 장점이었습니다. 대신 코드 리뷰가 없는 만큼 기술 부채를 쌓지 않으려 의식적으로 노력했습니다.
 
-다음 단계로는 Docker 기반 컨테이너 운영을 더 깊이 다루고, LLM 응답 품질을 체계적으로 추적하는 모니터링 체계와 자연어→SPARQL 파이프라인의 정확도를 정량 평가하는 프레임워크를 만들어 보고 싶습니다.
+다음 단계로는 Kubernetes 환경에서의 컨테이너 오케스트레이션 경험을 쌓고, Langfuse 같은 LLMOps 도구를 도입해 NL→SPARQL 파이프라인의 정확도·지연·비용을 정량적으로 추적하는 모니터링 체계를 구축하고 싶습니다. 특히 템플릿 매칭 vs LLM fallback 비율, IRI 매칭 정확도 같은 파이프라인 단계별 메트릭을 체계적으로 수집해 품질을 지속 개선하는 프레임워크가 필요하다고 느끼고 있습니다.
 
 ---
 
-**Tech Stack** · Python · TypeScript · Sigma.js · Graphology · LangChain Core · Jena Fuseki (TDB2 + OWL) · Elasticsearch · BGE-M3 · Docling · Docker · Jenkins
+**Tech Stack** · Python · TypeScript · Sigma.js · Graphology · LangChain Core · Langflow (FastAPI 기반) · Jena Fuseki (TDB2 + OWL) · Elasticsearch · BGE-M3 · Docling · Docker · Jenkins
 
-**핵심 키워드** · Knowledge Graph · RAG · Hybrid Search · Text-to-SPARQL · LLM Pipeline · Data Pipeline · VectorDB · Embedding · 비동기 파이프라인 · Docker · CI/CD
+**핵심 키워드** · Knowledge Graph · RAG · Hybrid Search · Text-to-SPARQL · LLM Pipeline · Data Pipeline · VectorDB · Embedding · Retriever · LLMOps · 비동기 파이프라인 · Docker

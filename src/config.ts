@@ -5,7 +5,7 @@ export const SITE = {
   desc: "11년차 풀스택 · AI/Data 엔지니어 · RAG Pipeline · LLM · Vector DB",
   title: "Youngsang Park",
   ogImage: "astropaper-og.jpg",
-  lightAndDarkMode: true,
+  lightAndDarkMode: false,
   postPerIndex: 4,
   postPerPage: 4,
   scheduledPostMargin: 15 * 60 * 1000,

@@ -22,13 +22,13 @@ Python · Java · TypeScript · JavaScript · SQL
 FastAPI · Spring · Node.js
 
 **AI / Data**
-LLM · RAG · Vector DB (FAISS, Milvus) · Elasticsearch · Jena Fuseki · SentenceTransformer
+LLM · RAG · Vector DB (FAISS) · Elasticsearch · BGE-M3 · Jena Fuseki
 
 **Frontend**
 TypeScript · Sigma.js · Graphology · Webpack
 
 **Infra**
-Docker · Jenkins · GitLab CI · Linux
+Docker · Jenkins · Git · Linux
 
 ## Contact
 
