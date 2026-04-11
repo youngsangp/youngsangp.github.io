@@ -47,7 +47,7 @@ Langflow는 워크플로우를 시각적으로 설계하고, 컴포넌트 단위
 
 ## 내가 담당한 영역
 
-### 1. Jena Ontology Retriever (546줄)
+### 1. Jena Ontology Retriever
 
 Langflow RAG 워크플로우에서 **Knowledge Graph를 검색 소스로 사용**할 수 있게 만든 커스텀 Retriever 컴포넌트입니다. 두 가지 모드를 지원합니다:
 
@@ -56,7 +56,7 @@ Langflow RAG 워크플로우에서 **Knowledge Graph를 검색 소스로 사용*
 
 벡터 검색(비정형 문서)과 그래프 검색(정형 관계)을 **하나의 Retriever 인터페이스**로 통합해, 워크플로우 설계자가 데이터 소스를 의식하지 않고 조합할 수 있게 만든 것이 핵심 설계 포인트입니다. 시맨틱 임계값, Top-K, 최대 트리플 수, Hop 깊이 등을 Langflow UI에서 파라미터로 조절 가능합니다.
 
-### 2. DataStore Retriever (291줄)
+### 2. DataStore Retriever
 
 Elasticsearch 벡터 저장소를 Langflow 워크플로우에서 **범용 검색 컴포넌트**로 사용할 수 있게 만든 Retriever입니다.
 
